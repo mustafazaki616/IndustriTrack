@@ -19,9 +19,33 @@ namespace backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ShipmentModel>>> GetShipments()
+        public async Task<ActionResult<IEnumerable<object>>> GetShipments()
         {
-            return await _context.Shipments.ToListAsync();
+            var shipments = await _context.Shipments
+                .Join(_context.Orders,
+                    shipment => shipment.OrderId,
+                    order => order.Id,
+                    (shipment, order) => new
+                    {
+                        shipment.Id,
+                        shipment.OrderId,
+                        shipment.Status,
+                        shipment.TrackingNumber,
+                        shipment.ShippingAddress,
+                        shipment.Carrier,
+                        shipment.ShippingCost,
+                        shipment.EstimatedDelivery,
+                        shipment.ActualDelivery,
+                        shipment.CreatedAt,
+                        shipment.UpdatedAt,
+                        Customer = order.Customer,
+                        Article = order.Article,
+                        Sizes = order.Sizes,
+                        TotalUnits = order.TotalQuantity
+                    })
+                .ToListAsync();
+
+            return shipments;
         }
 
         [HttpGet("{id}")]
