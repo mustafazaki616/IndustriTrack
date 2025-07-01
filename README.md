@@ -160,9 +160,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-- [Your Name] - Full Stack Developer
-- [Team Member 1] - Backend Developer
-- [Team Member 2] - Frontend Developer
+- Zaki Mustafa - Full Stack Developer
+- Rohaan Ehtesham - Backend Developer
+- Wajih Mustafa - Frontend Developer
 
 ## 📞 Support
 
