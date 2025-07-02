@@ -21,7 +21,24 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PaymentModel>>> GetPayments()
         {
-            return await _context.Payments.ToListAsync();
+            var today = DateTime.UtcNow.Date;
+            var payments = await _context.Payments.ToListAsync();
+            foreach (var payment in payments)
+            {
+                // Reverse counter for DaysUntilFullPayment
+                var daysPassed = (today - payment.CreatedAt.Date).Days;
+                payment.DaysUntilFullPayment = payment.DaysUntilFullPayment - daysPassed;
+                // Status logic
+                if (payment.RemainingAmount == 0 && payment.AdvanceReceived)
+                    payment.Status = "Completed";
+                else if (payment.AdvanceReceived && payment.RemainingAmount > 0)
+                    payment.Status = "Partial";
+                else if (!payment.AdvanceReceived && payment.AdvanceDueDaysLeft < 0)
+                    payment.Status = "Unpaid";
+                else
+                    payment.Status = "Pending";
+            }
+            return payments;
         }
 
         [HttpGet("{id}")]
@@ -32,13 +49,40 @@ namespace backend.Controllers
             {
                 return NotFound();
             }
+            var today = DateTime.UtcNow.Date;
+            var daysPassed = (today - payment.CreatedAt.Date).Days;
+            payment.DaysUntilFullPayment = payment.DaysUntilFullPayment - daysPassed;
+            // Status logic
+            if (payment.RemainingAmount == 0 && payment.AdvanceReceived)
+                payment.Status = "Completed";
+            else if (payment.AdvanceReceived && payment.RemainingAmount > 0)
+                payment.Status = "Partial";
+            else if (!payment.AdvanceReceived && payment.AdvanceDueDaysLeft < 0)
+                payment.Status = "Unpaid";
+            else
+                payment.Status = "Pending";
             return payment;
         }
 
         [HttpPost]
         public async Task<ActionResult<PaymentModel>> CreatePayment([FromBody] PaymentModel payment)
         {
-            payment.CreatedAt = DateTime.UtcNow;
+            if (string.IsNullOrWhiteSpace(payment.CustomerName) || payment.Amount <= 0)
+                return BadRequest("Customer name and positive amount are required.");
+            payment.RemainingAmount = payment.Amount;
+            if (!payment.AdvanceDueDate.HasValue)
+                payment.AdvanceDueDate = DateTime.UtcNow.AddDays(7);
+            if (!payment.FullPaymentDueDate.HasValue && payment.AdvanceReceived)
+                payment.FullPaymentDueDate = payment.AdvanceDueDate.Value.AddDays(7);
+            // Status logic
+            if (payment.RemainingAmount == 0 && payment.AdvanceReceived)
+                payment.Status = "Completed";
+            else if (payment.AdvanceReceived && payment.RemainingAmount > 0)
+                payment.Status = "Partial";
+            else if (!payment.AdvanceReceived && payment.AdvanceDueDate.Value.Date < DateTime.UtcNow.Date)
+                payment.Status = "Unpaid";
+            else
+                payment.Status = "Pending";
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetPayment), new { id = payment.Id }, payment);
@@ -47,60 +91,35 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePayment(int id, [FromBody] PaymentModel payment)
         {
-            if (id != payment.Id)
-            {
-                return BadRequest();
-            }
-
-            var existingPayment = await _context.Payments.FindAsync(id);
-            if (existingPayment == null)
-            {
-                return NotFound();
-            }
-
-            existingPayment.OrderId = payment.OrderId;
-            existingPayment.Status = payment.Status;
-            existingPayment.Method = payment.Method;
-            existingPayment.Amount = payment.Amount;
-            existingPayment.PaymentDate = payment.PaymentDate;
-            existingPayment.Customer = payment.Customer;
-            existingPayment.TransactionId = payment.TransactionId;
-            existingPayment.Notes = payment.Notes;
-            existingPayment.IsPaid = payment.IsPaid;
-            existingPayment.UpdatedAt = DateTime.UtcNow;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PaymentExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            var existing = await _context.Payments.FirstOrDefaultAsync(p => p.Id == id);
+            if (existing == null) return NotFound();
+            existing.CustomerName = payment.CustomerName;
+            existing.Amount = payment.Amount;
+            existing.AdvanceReceived = payment.AdvanceReceived;
+            existing.AdvanceDueDate = payment.AdvanceDueDate;
+            existing.RemainingAmount = payment.RemainingAmount;
+            existing.FullPaymentDueDate = payment.FullPaymentDueDate;
+            // Status logic
+            if (existing.RemainingAmount == 0 && existing.AdvanceReceived)
+                existing.Status = "Completed";
+            else if (existing.AdvanceReceived && existing.RemainingAmount > 0)
+                existing.Status = "Partial";
+            else if (!existing.AdvanceReceived && existing.AdvanceDueDate.HasValue && existing.AdvanceDueDate.Value.Date < DateTime.UtcNow.Date)
+                existing.Status = "Unpaid";
+            else
+                existing.Status = "Pending";
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePayment(int id)
         {
-            var payment = await _context.Payments.FindAsync(id);
-            if (payment == null)
-            {
-                return NotFound();
-            }
-
+            var payment = await _context.Payments.FirstOrDefaultAsync(p => p.Id == id);
+            if (payment == null) return NotFound(new { message = "Payment not found." });
             _context.Payments.Remove(payment);
             await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok(new { message = "Payment deleted." });
         }
 
         private bool PaymentExists(int id)

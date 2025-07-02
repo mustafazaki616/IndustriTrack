@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Models
 {
@@ -11,8 +12,12 @@ namespace backend.Models
         public int OrderId { get; set; }
         
         [Required]
-        [MaxLength(50)]
-        public required string Status { get; set; }
+        [MaxLength(100)]
+        public string CustomerName { get; set; } = string.Empty;
+        
+        [Required]
+        [MaxLength(20)]
+        public string Status { get; set; } = "Pending"; // Pending, Completed, Partial, Unpaid
         
         [MaxLength(50)]
         public string? Method { get; set; }
@@ -21,6 +26,7 @@ namespace backend.Models
         
         public DateTime? UpdatedAt { get; set; }
         
+        [Required]
         public decimal Amount { get; set; }
         
         public DateTime? PaymentDate { get; set; }
@@ -32,5 +38,19 @@ namespace backend.Models
         public string? Notes { get; set; }
         
         public bool IsPaid { get; set; }
+
+        // Added fields for frontend sync
+        [MaxLength(10)]
+        public string Currency { get; set; } = "USD";
+        public bool AdvanceReceived { get; set; }
+        public DateTime? AdvanceDueDate { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public DateTime? FullPaymentDueDate { get; set; }
+
+        // Calculated fields (not mapped to DB)
+        public int AdvanceDueDaysLeft { get; set; }
+        public int DaysUntilFullPayment { get; set; }
+        [NotMapped]
+        public bool isOverdue { get; set; }
     }
 } 

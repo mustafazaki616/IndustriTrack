@@ -181,6 +181,54 @@ namespace backend.Data
                 context.Settings.AddRange(settings);
             }
 
+            // Always seed payments if they don't exist
+            if (!context.Payments.Any())
+            {
+                var payments = new List<PaymentModel>
+                {
+                    new PaymentModel
+                    {
+                        OrderId = 1,
+                        CustomerName = "Acme Corp",
+                        Status = "Pending",
+                        Amount = 299.99m,
+                        Currency = "USD",
+                        AdvanceReceived = false,
+                        AdvanceDueDate = DateTime.UtcNow.AddDays(-2),
+                        RemainingAmount = 299.99m,
+                        AdvanceDueDaysLeft = 5,
+                        DaysUntilFullPayment = 10
+                    },
+                    new PaymentModel
+                    {
+                        OrderId = 2,
+                        CustomerName = "Beta Textiles",
+                        Status = "Partial",
+                        Amount = 89.99m,
+                        Currency = "USD",
+                        AdvanceReceived = true,
+                        AdvanceDueDate = DateTime.UtcNow.AddDays(-1),
+                        RemainingAmount = 40.00m,
+                        AdvanceDueDaysLeft = 5,
+                        DaysUntilFullPayment = 10
+                    },
+                    new PaymentModel
+                    {
+                        OrderId = 3,
+                        CustomerName = "Fashion Forward",
+                        Status = "Completed",
+                        Amount = 199.99m,
+                        Currency = "USD",
+                        AdvanceReceived = true,
+                        AdvanceDueDate = DateTime.UtcNow.AddDays(3),
+                        RemainingAmount = 0.00m,
+                        AdvanceDueDaysLeft = 5,
+                        DaysUntilFullPayment = 10
+                    }
+                };
+                context.Payments.AddRange(payments);
+            }
+
             // Always seed shipments if they don't exist
             if (!hasShipments)
             {
