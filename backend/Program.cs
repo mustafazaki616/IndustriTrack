@@ -3,6 +3,10 @@ using backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure port for Railway deployment
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://*:{port}");
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers()
@@ -21,7 +25,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins(
+                "http://localhost:3000", // Local development
+                "https://industri-track-frontend-c9aa8o08b-zakis-projects-a97e61f1.vercel.app", // Vercel deployment
+                "https://*.vercel.app" // Allow all Vercel deployments
+              )
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -45,8 +53,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseCors("AllowFrontend"); // Allow CORS for React dev server
 }
-// In production, configure CORS securely for your frontend domain only
-// app.UseCors("AllowFrontend");
+// Enable CORS for both development and production
+app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
