@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/IndustriTrack/static/css/main.233b3b67.css",
+    "main.js": "/IndustriTrack/static/js/main.3769bac9.js",
+    "index.html": "/IndustriTrack/index.html",
+    "main.233b3b67.css.map": "/IndustriTrack/static/css/main.233b3b67.css.map",
+    "main.3769bac9.js.map": "/IndustriTrack/static/js/main.3769bac9.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.233b3b67.css",
+    "static/js/main.3769bac9.js"
+  ]
+}
