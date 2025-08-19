@@ -61,7 +61,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Add health check endpoint for Railway
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow, version = "1.0.0" }));
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 // Add simple test endpoint
 app.MapGet("/", () => "IndustriTrack Backend is running!");
