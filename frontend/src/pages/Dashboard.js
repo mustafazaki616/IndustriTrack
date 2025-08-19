@@ -1,4 +1,5 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Grid, Card, CardContent, Typography, Box, useMediaQuery, useTheme, Alert } from '@mui/material';
 import { Bar } from 'react-chartjs-2';
 import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot } from '@mui/lab';
@@ -14,29 +15,23 @@ import {
   Legend,
 } from 'chart.js';
 import { DashboardAlertContext } from '../contexts/DashboardAlertContext';
+import { apiGet } from '../api';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-const summary = [
-  { label: 'Total Shipments', value: 120 },
-  { label: 'Pending Orders', value: 35 },
-  { label: 'Stock Alert', value: 10 },
-  { label: 'Payment Due', value: '$5,000' },
-];
-
 const barData1 = {
-  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   datasets: [
     {
       label: 'OK Pieces',
-      data: [120, 150, 170, 140, 180, 160],
+      data: [120, 150, 170, 140, 180, 160, 170, 180, 190, 200, 210, 220],
       backgroundColor: '#e3e7ed',
       borderRadius: 6,
       barPercentage: 0.5,
     },
     {
       label: 'Rejected',
-      data: [10, 8, 12, 7, 9, 6],
+      data: [10, 8, 12, 7, 9, 6, 10, 8, 12, 7, 9, 6],
       backgroundColor: '#bfc8d9',
       borderRadius: 6,
       barPercentage: 0.5,
@@ -45,18 +40,18 @@ const barData1 = {
 };
 
 const barData2 = {
-  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun','Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   datasets: [
     {
       label: 'Paid',
-      data: [100, 120, 110, 130, 125, 140],
+      data: [100, 120, 110, 130, 125, 140, 100, 120, 110, 130, 125, 140],
       backgroundColor: '#e3e7ed',
       borderRadius: 6,
       barPercentage: 0.5,
     },
     {
       label: 'Unpaid',
-      data: [20, 30, 25, 20, 30, 25],
+      data: [20, 30, 25, 20, 30, 25, 20, 30, 25, 20, 30, 25],
       backgroundColor: '#bfc8d9',
       borderRadius: 6,
       barPercentage: 0.5,
@@ -74,6 +69,47 @@ export default function Dashboard() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { alerts } = useContext(DashboardAlertContext);
+  const navigate = useNavigate();
+
+  // Dynamic summary state
+  const [summary, setSummary] = useState([
+    { label: 'Total Shipments', value: 0 },
+    { label: 'Pending Orders', value: 0 },
+    { label: 'Stock Alert', value: 0 },
+    { label: 'Payment Due', value: 0 },
+  ]);
+
+  useEffect(() => {
+    async function fetchSummary() {
+      try {
+        const [shipments, orders, payments, inventory] = await Promise.all([
+          apiGet('/api/shipments'),
+          apiGet('/api/orders'),
+          apiGet('/api/payments'),
+          apiGet('/api/inventory'),
+        ]);
+        const totalShipments = shipments.length;
+        const pendingOrders = orders.filter(o => (o.status || o.Status) === 'Pending Production').length;
+        const stockAlert = inventory.filter(i => i.quantity && i.quantity < 10).length; // threshold 10
+        const paymentDue = payments.filter(p => (p.status || p.Status) === 'Unpaid' || (p.status || p.Status) === 'Pending').reduce((sum, p) => sum + (p.amount || p.Amount || 0), 0);
+        setSummary([
+          { label: 'Total Shipments', value: totalShipments },
+          { label: 'Pending Orders', value: pendingOrders },
+          { label: 'Stock Alert', value: stockAlert },
+          { label: 'Payment Due', value: paymentDue.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) },
+        ]);
+      } catch (err) {
+        // fallback to zeros
+        setSummary([
+          { label: 'Total Shipments', value: 0 },
+          { label: 'Pending Orders', value: 0 },
+          { label: 'Stock Alert', value: 0 },
+          { label: 'Payment Due', value: 0 },
+        ]);
+      }
+    }
+    fetchSummary();
+  }, []);
 
   return (
     <Box sx={{ width: '100%', p: isMobile ? 1 : 3 }}>
@@ -115,6 +151,24 @@ export default function Dashboard() {
                 justifyContent: 'center',
                 alignItems: 'flex-start',
                 bgcolor: '#fff',
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  borderColor: '#bfc8d9',
+                },
+                transition: 'all 0.2s',
+              }}
+              onClick={() => {
+                // Navigate to the corresponding page based on the label
+                if (item.label === 'Total Shipments') {
+                  navigate('/shipments');
+                } else if (item.label === 'Pending Orders') {
+                  navigate('/orders');
+                } else if (item.label === 'Stock Alert') {
+                  navigate('/inventory');
+                } else if (item.label === 'Payment Due') {
+                  navigate('/payments');
+                }
               }}
             >
               <CardContent sx={{ p: 2, pb: '16px!important' }}>
@@ -218,4 +272,4 @@ export default function Dashboard() {
       </Card>
     </Box>
   );
-} 
+}

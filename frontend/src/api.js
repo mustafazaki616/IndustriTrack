@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5124'; // Adjust if your backend runs elsewhere
+const API_BASE = 'http://localhost:5124';
 
 export async function apiGet(path) {
   const res = await fetch(`${API_BASE}${path}`);
@@ -23,11 +23,13 @@ export async function apiPut(path, data) {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(await res.text());
+  if (res.status === 204) return;
   return res.json();
 }
 
 export async function apiDelete(path) {
   const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(await res.text());
+  if (res.status === 204) return;
   return res.json();
 } 

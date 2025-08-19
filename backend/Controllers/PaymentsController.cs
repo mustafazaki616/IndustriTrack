@@ -91,24 +91,63 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePayment(int id, [FromBody] PaymentModel payment)
         {
-            var existing = await _context.Payments.FirstOrDefaultAsync(p => p.Id == id);
-            if (existing == null) return NotFound();
-            existing.CustomerName = payment.CustomerName;
-            existing.Amount = payment.Amount;
-            existing.AdvanceReceived = payment.AdvanceReceived;
-            existing.AdvanceDueDate = payment.AdvanceDueDate;
-            existing.RemainingAmount = payment.RemainingAmount;
-            existing.FullPaymentDueDate = payment.FullPaymentDueDate;
-            // Status logic
-            if (existing.RemainingAmount == 0 && existing.AdvanceReceived)
-                existing.Status = "Completed";
-            else if (existing.AdvanceReceived && existing.RemainingAmount > 0)
-                existing.Status = "Partial";
-            else if (!existing.AdvanceReceived && existing.AdvanceDueDate.HasValue && existing.AdvanceDueDate.Value.Date < DateTime.UtcNow.Date)
-                existing.Status = "Unpaid";
-            else
-                existing.Status = "Pending";
-            await _context.SaveChangesAsync();
+            if (id != payment.Id)
+            {
+                return BadRequest();
+            }
+
+            var existingPayment = await _context.Payments.FindAsync(id);
+            if (existingPayment == null)
+            {
+                return NotFound();
+            }
+
+            existingPayment.OrderId = payment.OrderId;
+            existingPayment.CustomerName = payment.CustomerName;
+            existingPayment.Status = payment.Status;
+            existingPayment.Method = payment.Method;
+            existingPayment.Amount = payment.Amount;
+            existingPayment.PaymentDate = payment.PaymentDate;
+            existingPayment.Customer = payment.Customer;
+            existingPayment.TransactionId = payment.TransactionId;
+            existingPayment.Notes = payment.Notes;
+            existingPayment.IsPaid = payment.IsPaid;
+            existingPayment.Currency = payment.Currency;
+            existingPayment.AdvanceReceived = payment.AdvanceReceived;
+            existingPayment.AdvanceDueDate = payment.AdvanceDueDate;
+            existingPayment.RemainingAmount = payment.RemainingAmount;
+            existingPayment.FullPaymentDueDate = payment.FullPaymentDueDate;
+            existingPayment.AdvanceDueDaysLeft = payment.AdvanceDueDaysLeft;
+            existingPayment.DaysUntilFullPayment = payment.DaysUntilFullPayment;
+            existingPayment.UpdatedAt = DateTime.UtcNow;
+
+            // Auto-update shipment status if payment is completed
+            if (payment.Status == "Completed")
+            {
+                var shipment = await _context.Shipments.FirstOrDefaultAsync(s => s.OrderId == payment.OrderId);
+                if (shipment != null)
+                {
+                    shipment.Status = "Ready for Shipment";
+                    shipment.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PaymentExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
             return NoContent();
         }
 

@@ -24,10 +24,19 @@ export default function Customers() {
 
   const filtered = customers.filter(
     (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.company?.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase())
+      (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (c.company || '').toLowerCase().includes(search.toLowerCase()) ||
+      (c.email || '').toLowerCase().includes(search.toLowerCase())
   );
+
+  const rows = filtered.map(c => ({
+    id: c.id,
+    name: c.name || '',
+    company: c.company || '',
+    contact: c.contactPerson || '',
+    email: c.email || '',
+    phone: c.phone || '',
+  }));
 
   const columns = [
     { field: 'name', headerName: 'Customer', flex: 1 },
@@ -70,7 +79,7 @@ export default function Customers() {
       </Card>
       <Box sx={{ height: 500, width: '100%', bgcolor: '#fff', borderRadius: 2, border: '1px solid #e0e3e7' }}>
         <DataGrid
-          rows={filtered}
+          rows={rows}
           columns={columns}
           pageSize={8}
           rowsPerPageOptions={[8]}

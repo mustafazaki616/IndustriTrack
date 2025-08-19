@@ -12,6 +12,9 @@ namespace backend.Controllers
     public class ShipmentsController : ControllerBase
     {
         private readonly IndustriTrackContext _context;
+        private static readonly HashSet<string> AllowedStatuses = new HashSet<string> {
+            "Pending Approval", "Approved", "TRIMS IN HOUSE", "FABRIC ETA", "CUTTING", "STITCHING", "FINISHING", "PACKING", "OFFLINE"
+        };
 
         public ShipmentsController(IndustriTrackContext context)
         {
@@ -62,6 +65,10 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<ShipmentModel>> CreateShipment([FromBody] ShipmentModel shipment)
         {
+            if (!AllowedStatuses.Contains(shipment.Status))
+            {
+                return BadRequest($"Invalid status. Allowed statuses: {string.Join(", ", AllowedStatuses)}");
+            }
             shipment.CreatedAt = DateTime.UtcNow;
             _context.Shipments.Add(shipment);
             await _context.SaveChangesAsync();
@@ -75,13 +82,15 @@ namespace backend.Controllers
             {
                 return BadRequest();
             }
-
+            if (!AllowedStatuses.Contains(shipment.Status))
+            {
+                return BadRequest($"Invalid status. Allowed statuses: {string.Join(", ", AllowedStatuses)}");
+            }
             var existingShipment = await _context.Shipments.FindAsync(id);
             if (existingShipment == null)
             {
                 return NotFound();
             }
-
             existingShipment.OrderId = shipment.OrderId;
             existingShipment.Status = shipment.Status;
             existingShipment.TrackingNumber = shipment.TrackingNumber;
@@ -91,7 +100,6 @@ namespace backend.Controllers
             existingShipment.EstimatedDelivery = shipment.EstimatedDelivery;
             existingShipment.ActualDelivery = shipment.ActualDelivery;
             existingShipment.UpdatedAt = DateTime.UtcNow;
-
             try
             {
                 await _context.SaveChangesAsync();
@@ -107,7 +115,6 @@ namespace backend.Controllers
                     throw;
                 }
             }
-
             return NoContent();
         }
 
@@ -124,6 +131,20 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpPost("approve/{orderId}")]
+        public async Task<IActionResult> ApproveShipment(int orderId)
+        {
+            var shipment = await _context.Shipments.FirstOrDefaultAsync(s => s.OrderId == orderId);
+            if (shipment == null)
+            {
+                return NotFound();
+            }
+            shipment.Status = "Approved";
+            shipment.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return Ok(shipment);
         }
 
         private bool ShipmentExists(int id)

@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using UglyToad.PdfPig;
 using System.Linq;
 using System.Net.Http;
+using Microsoft.Extensions.Logging;
+using backend.Controllers;
 
 namespace backend.Controllers
 {
@@ -16,10 +18,12 @@ namespace backend.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IndustriTrackContext _context;
+        private readonly ILogger<OrdersController> _logger;
 
-        public OrdersController(IndustriTrackContext context)
+        public OrdersController(IndustriTrackContext context, ILogger<OrdersController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -45,6 +49,42 @@ namespace backend.Controllers
             order.CreatedAt = DateTime.UtcNow;
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
+            _logger.LogInformation($"Order created: Id={order.Id}, Customer={order.Customer}");
+
+            // Create payment with status 'Unpaid'
+            var payment = new PaymentModel
+            {
+                OrderId = order.Id,
+                CustomerName = order.Customer,
+                Status = "Unpaid",
+                Amount = order.Price ?? 0,
+                CreatedAt = DateTime.UtcNow,
+                IsPaid = false,
+                Currency = "USD",
+                RemainingAmount = order.Price ?? 0
+            };
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation($"Payment created: Id={payment.Id}, OrderId={payment.OrderId}, Amount={payment.Amount}");
+
+            // Create shipment with status 'Pending Approval'
+            var shipment = new ShipmentModel
+            {
+                OrderId = order.Id,
+                Status = "Pending Approval",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Shipments.Add(shipment);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation($"Shipment created: Id={shipment.Id}, OrderId={shipment.OrderId}, Status={shipment.Status}");
+
+            // AUTOMATION: If order is created with status 'In Production', create production stages
+            if (order.Status == "In Production")
+            {
+                var prodController = new ProductionController(_context);
+                await prodController.EnsureProductionStagesForOrder(order.Id);
+            }
+
             return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
         }
 
@@ -87,6 +127,13 @@ namespace backend.Controllers
                 }
             }
 
+            // AUTOMATION: If order status is set to 'In Production', create production stages
+            if (order.Status == "In Production")
+            {
+                var prodController = new ProductionController(_context);
+                await prodController.EnsureProductionStagesForOrder(order.Id);
+            }
+
             return NoContent();
         }
 
@@ -98,6 +145,19 @@ namespace backend.Controllers
             {
                 return NotFound();
             }
+
+            // Delete related productions
+            var productions = _context.Productions.Where(p => p.OrderId == id);
+            _context.Productions.RemoveRange(productions);
+            // Delete related payments
+            var payments = _context.Payments.Where(p => p.OrderId == id);
+            _context.Payments.RemoveRange(payments);
+            // Delete related shipments
+            var shipments = _context.Shipments.Where(s => s.OrderId == id);
+            _context.Shipments.RemoveRange(shipments);
+            // Delete related inspections
+            var inspections = _context.Inspections.Where(i => i.OrderId == id);
+            _context.Inspections.RemoveRange(inspections);
 
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
@@ -220,6 +280,66 @@ namespace backend.Controllers
             var response = await client.PostAsync(pythonUrl, content);
             var result = await response.Content.ReadAsStringAsync();
             return Content(result, "application/json");
+        }
+
+        [HttpPost("confirm-order")]
+        public async Task<IActionResult> ConfirmOrder([FromBody] OrderModel order)
+        {
+            // 1. Normalize and validate customer name
+            var customerName = (order.Customer ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(customerName))
+            {
+                return BadRequest("Customer name is required.");
+            }
+            // Case-insensitive match
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Name.ToLower() == customerName.ToLower());
+            if (customer == null)
+            {
+                customer = new CustomerModel
+                {
+                    Name = customerName,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+                // Optionally set more fields if available in order (e.g., Email, Phone)
+                _context.Customers.Add(customer);
+                await _context.SaveChangesAsync();
+            }
+            // Optionally update customer info here if more fields are available
+
+            // 2. Create order (status: Pending Production)
+            order.Customer = customerName;
+            order.Status = "Pending Production";
+            order.CreatedAt = DateTime.UtcNow;
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            // 3. Create payment (status: Unpaid)
+            var payment = new PaymentModel
+            {
+                OrderId = order.Id,
+                CustomerName = customerName,
+                Status = "Unpaid",
+                Amount = order.Price ?? 0,
+                CreatedAt = DateTime.UtcNow,
+                IsPaid = false,
+                Currency = "USD",
+                RemainingAmount = order.Price ?? 0
+            };
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
+
+            // 4. Create shipment (status: Pending Approval)
+            var shipment = new ShipmentModel
+            {
+                OrderId = order.Id,
+                Status = "Pending Approval",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Shipments.Add(shipment);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { order, payment, shipment });
         }
     }
 } 

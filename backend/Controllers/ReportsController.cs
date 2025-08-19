@@ -44,6 +44,43 @@ namespace backend.Controllers
             return CreatedAtAction(nameof(GetReport), new { id = report.Id }, report);
         }
 
+        [HttpPost("generate/{productionId}")]
+        public async Task<IActionResult> GenerateReport(int productionId)
+        {
+            var production = await _context.Productions.FindAsync(productionId);
+            if (production == null)
+                return NotFound("Production not found");
+            var order = await _context.Orders.FindAsync(production.OrderId);
+            if (order == null)
+                return NotFound("Order not found");
+
+            // Fetch stages from ProductionStageModel
+            var stages = await _context.ProductionStages
+                .Where(s => s.OrderId == production.OrderId)
+                .OrderBy(s => s.StageNumber)
+                .ToListAsync();
+
+            // Compose report data
+            var reportData = new {
+                Order = order,
+                Production = production,
+                Stages = stages
+            };
+            var report = new ReportModel
+            {
+                Title = $"Production Report for Order #{order.Id}",
+                Type = "Production",
+                Data = System.Text.Json.JsonSerializer.Serialize(reportData),
+                Description = $"Auto-generated report for Order #{order.Id} ({order.Article})",
+                IsGenerated = true,
+                GeneratedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Reports.Add(report);
+            await _context.SaveChangesAsync();
+            return Ok(report);
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateReport(int id, [FromBody] ReportModel report)
         {

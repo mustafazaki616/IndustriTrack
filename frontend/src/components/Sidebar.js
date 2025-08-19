@@ -36,6 +36,7 @@ import { useAuth } from '../contexts/AuthContext';
 const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/' },
   { text: 'Customers', icon: <People />, path: '/customers' },
+  { text: 'Orders', icon: <Assignment />, path: '/orders' },
   { text: 'Upload Order (Smart Import)', icon: <CloudUpload />, path: '/uploadorder' },
   { text: 'Shipments', icon: <LocalShipping />, path: '/shipments' },
   { text: 'Production (Time & Action)', icon: <Factory />, path: '/production' },
@@ -86,7 +87,7 @@ export default function Sidebar() {
           letterSpacing: 1,
         }}
       >
-        AIROTIX
+        IndustriTrack
       </Box>
       <Divider sx={{ mb: 1, borderColor: '#e0e3e7' }} />
       <List sx={{ flex: 1 }}>

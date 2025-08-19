@@ -21,6 +21,8 @@ namespace backend.Data
         public DbSet<InventoryModel> Inventory { get; set; }
         public DbSet<ReportModel> Reports { get; set; }
         public DbSet<SettingModel> Settings { get; set; }
+        public DbSet<StockOutModel> StockOuts { get; set; }
+        public DbSet<ProductionStageModel> ProductionStages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +37,11 @@ namespace backend.Data
             var stringConverter = new ValueConverter<string?, string>(
                 v => v ?? string.Empty,
                 v => v
+            );
+
+            var productionStagesConverter = new ValueConverter<List<ProductionStage>?, string>(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<List<ProductionStage>>(v, (JsonSerializerOptions?)null) ?? new List<ProductionStage>()
             );
 
             // Configure OrderModel
@@ -63,6 +70,22 @@ namespace backend.Data
                 entity.Property(e => e.OrderId).IsRequired();
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.TrackingNumber).HasMaxLength(100);
+            });
+
+            // Configure ProductionStageModel
+            modelBuilder.Entity<ProductionStageModel>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.StageName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.StageNumber).IsRequired();
+                entity.Property(e => e.ExpectedDuration).IsRequired();
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.WorkerName).HasMaxLength(100);
+                entity.Property(e => e.Notes);
+                entity.HasOne<OrderModel>()
+                    .WithMany()
+                    .HasForeignKey(e => e.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configure ProductionModel
@@ -116,6 +139,17 @@ namespace backend.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Key).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Value).HasMaxLength(1000);
+            });
+
+            // Configure StockOutModel
+            modelBuilder.Entity<StockOutModel>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Product).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Buyer).HasMaxLength(200);
+                entity.Property(e => e.Reason).HasMaxLength(200);
+                entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Total).HasColumnType("decimal(18,2)");
             });
         }
     }

@@ -4,6 +4,7 @@ using backend.Models;
 using backend.Data;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace backend.Controllers
 {
@@ -69,6 +70,49 @@ namespace backend.Controllers
             existingInspection.DefectCount = inspection.DefectCount;
             existingInspection.UpdatedAt = DateTime.UtcNow;
 
+            // Auto-generate report and update payment status if inspection is completed
+            if (inspection.Status == "Completed")
+            {
+                var order = await _context.Orders.FindAsync(existingInspection.OrderId);
+                if (order != null)
+                {
+                    // Create report if not exists
+                    var existingReport = await _context.Reports.FirstOrDefaultAsync(r => r.Title == $"Inspection Report for Order #{order.Id}" && r.Type == "Inspection");
+                    if (existingReport == null)
+                    {
+                        var report = new ReportModel
+                        {
+                            Title = $"Inspection Report for Order #{order.Id}",
+                            Type = "Inspection",
+                            CreatedAt = DateTime.UtcNow,
+                            Description = inspection.Notes,
+                            Data = JsonSerializer.Serialize(new {
+                                OrderId = order.Id,
+                                Customer = order.Customer,
+                                Article = order.Article,
+                                InspectionResult = inspection.Result,
+                                Inspector = inspection.Inspector,
+                                Notes = inspection.Notes,
+                                IsPassed = inspection.IsPassed,
+                                Defects = inspection.Defects,
+                                DefectCount = inspection.DefectCount
+                            }),
+                            IsGenerated = true,
+                            GeneratedBy = inspection.Inspector,
+                            GeneratedAt = DateTime.UtcNow
+                        };
+                        _context.Reports.Add(report);
+                    }
+                    // Update payment status
+                    var payment = await _context.Payments.FirstOrDefaultAsync(p => p.OrderId == order.Id);
+                    if (payment != null)
+                    {
+                        payment.Status = "Ready for Payment";
+                        payment.UpdatedAt = DateTime.UtcNow;
+                    }
+                }
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -101,6 +145,28 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpPost("start/{orderId}")]
+        public async Task<IActionResult> StartInspection(int orderId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null)
+                return NotFound("Order not found");
+            // Check if already in inspection
+            var existing = await _context.Inspections.FirstOrDefaultAsync(i => i.OrderId == orderId);
+            if (existing != null)
+                return BadRequest("Inspection already started for this order");
+            var inspection = new InspectionModel
+            {
+                OrderId = orderId,
+                Status = "In Progress",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Inspections.Add(inspection);
+            order.Status = "Inspection";
+            await _context.SaveChangesAsync();
+            return Ok(inspection);
         }
 
         private bool InspectionExists(int id)

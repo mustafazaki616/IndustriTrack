@@ -28,15 +28,15 @@ export default function Payments() {
   const [showDaysLeftInput, setShowDaysLeftInput] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [addPayment, setAddPayment] = useState({
-    OrderId: '',
-    CustomerName: '',
-    Amount: '',
-    Status: 'Pending',
-    Currency: 'USD',
-    AdvanceReceived: false,
+    orderId: '',
+    customerName: '',
+    amount: '',
+    status: 'Pending',
+    currency: 'USD',
+    advanceReceived: false,
     advanceDueDaysLeft: 5,
     daysUntilFullPayment: 10,
-    RemainingAmount: '',
+    remainingAmount: '',
   });
   const [addDaysLeftInput, setAddDaysLeftInput] = useState('');
   const [addShowDaysLeftInput, setAddShowDaysLeftInput] = useState(false);
@@ -55,7 +55,7 @@ export default function Payments() {
   useEffect(() => {
     paymentData.forEach((row) => {
       if (
-        row.AdvanceReceived &&
+        row.advanceReceived &&
         row.DaysLeftForCompletePayment &&
         row.Status !== 'Paid' &&
         row.FullPaymentStartDate
@@ -107,7 +107,6 @@ export default function Payments() {
   };
 
   const handleSave = async () => {
-    // Only send fields used by backend
     const updated = {
       id: editPayment.id,
       orderId: Number(editPayment.orderId),
@@ -130,15 +129,15 @@ export default function Payments() {
   const handleAddOpen = () => {
     setAddOpen(true);
     setAddPayment({
-      OrderId: '',
-      CustomerName: '',
-      Amount: '',
-      Status: 'Pending',
-      Currency: 'USD',
-      AdvanceReceived: false,
+      orderId: '',
+      customerName: '',
+      amount: '',
+      status: 'Pending',
+      currency: 'USD',
+      advanceReceived: false,
       advanceDueDaysLeft: 5,
       daysUntilFullPayment: 10,
-      RemainingAmount: '',
+      remainingAmount: '',
     });
     setAddShowDaysLeftInput(false);
     setAddError('');
@@ -164,19 +163,19 @@ export default function Payments() {
   };
   const handleAddSave = async () => {
     setAddError('');
-    if (!addPayment.OrderId || isNaN(Number(addPayment.OrderId))) {
+    if (!addPayment.orderId || isNaN(Number(addPayment.orderId))) {
       setAddError('Order ID is required and must be a number.');
       return;
     }
-    if (!addPayment.CustomerName) {
+    if (!addPayment.customerName) {
       setAddError('Customer Name is required.');
       return;
     }
-    if (!addPayment.Amount || isNaN(Number(addPayment.Amount))) {
+    if (!addPayment.amount || isNaN(Number(addPayment.amount))) {
       setAddError('Amount is required and must be a number.');
       return;
     }
-    if (!addPayment.Status) {
+    if (!addPayment.status) {
       setAddError('Status is required.');
       return;
     }
@@ -189,15 +188,15 @@ export default function Payments() {
       return;
     }
     const toSend = {
-      OrderId: Number(addPayment.OrderId),
-      CustomerName: addPayment.CustomerName,
-      Amount: Number(addPayment.Amount),
-      Status: addPayment.Status,
-      Currency: addPayment.Currency,
-      AdvanceReceived: addPayment.AdvanceReceived,
+      orderId: Number(addPayment.orderId),
+      customerName: addPayment.customerName,
+      amount: Number(addPayment.amount),
+      status: addPayment.status,
+      currency: addPayment.currency,
+      advanceReceived: addPayment.advanceReceived,
       advanceDueDaysLeft: Number(addPayment.advanceDueDaysLeft),
-      daysUntilFullPayment: addPayment.AdvanceReceived ? Number(addPayment.daysUntilFullPayment) : 0,
-      RemainingAmount: addPayment.RemainingAmount ? Number(addPayment.RemainingAmount) : 0,
+      daysUntilFullPayment: addPayment.advanceReceived ? Number(addPayment.daysUntilFullPayment) : 0,
+      remainingAmount: addPayment.remainingAmount ? Number(addPayment.remainingAmount) : 0,
     };
     try {
       await axios.post('/api/payments', toSend);
@@ -391,17 +390,17 @@ export default function Payments() {
         <DialogContent>
           {addError && <Alert severity="error" sx={{ mb: 2 }}>{addError}</Alert>}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField label="Order ID" name="OrderId" value={addPayment.OrderId} onChange={handleAddChange} fullWidth required type="number" />
-            <TextField label="Customer Name" name="CustomerName" value={addPayment.CustomerName} onChange={handleAddChange} fullWidth required />
-            <TextField label="Amount" name="Amount" value={addPayment.Amount} onChange={handleAddChange} fullWidth required type="number" />
-            <Select label="Currency" name="Currency" value={addPayment.Currency} onChange={handleAddChange} fullWidth>
+            <TextField label="Order ID" name="orderId" value={addPayment.orderId} onChange={handleAddChange} fullWidth required type="number" />
+            <TextField label="Customer Name" name="customerName" value={addPayment.customerName} onChange={handleAddChange} fullWidth required />
+            <TextField label="Amount" name="amount" value={addPayment.amount} onChange={handleAddChange} fullWidth required type="number" />
+            <Select label="Currency" name="currency" value={addPayment.currency} onChange={handleAddChange} fullWidth>
               {currencies.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
             </Select>
             <FormControlLabel
-              control={<Checkbox checked={addPayment.AdvanceReceived} onChange={handleAddAdvanceChange} sx={{ color: blue[600], '&.Mui-checked': { color: blue[600] } }} />}
+              control={<Checkbox checked={addPayment.advanceReceived} onChange={handleAddAdvanceChange} sx={{ color: blue[600], '&.Mui-checked': { color: blue[600] } }} />}
               label="Advance Received"
             />
-            {addPayment.AdvanceReceived && (
+            {addPayment.advanceReceived && (
               <TextField
                 label="Days Until Full Payment"
                 name="daysUntilFullPayment"
@@ -412,9 +411,9 @@ export default function Payments() {
                 required
               />
             )}
-            <TextField label="Advance Due (days)" name="AdvanceDueDays" value={addPayment.AdvanceDueDays} onChange={handleAddChange} fullWidth required type="number" />
-            <TextField label="Remaining Amount" name="RemainingAmount" value={addPayment.RemainingAmount} onChange={handleAddChange} fullWidth type="number" />
-            <Select label="Status" name="Status" value={addPayment.Status} onChange={handleAddChange} fullWidth>
+            <TextField label="Advance Due (days)" name="advanceDueDaysLeft" value={addPayment.advanceDueDaysLeft} onChange={handleAddChange} fullWidth required type="number" />
+            <TextField label="Remaining Amount" name="remainingAmount" value={addPayment.remainingAmount} onChange={handleAddChange} fullWidth type="number" />
+            <Select label="Status" name="status" value={addPayment.status} onChange={handleAddChange} fullWidth>
               <MenuItem value="Completed">Completed</MenuItem>
               <MenuItem value="Partial">Partial</MenuItem>
               <MenuItem value="Unpaid">Unpaid</MenuItem>

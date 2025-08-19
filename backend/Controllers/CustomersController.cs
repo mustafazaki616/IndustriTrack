@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using backend.Models;
+using backend.Data;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace backend.Controllers
 {
@@ -9,39 +12,44 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class CustomersController : ControllerBase
     {
-        private static List<CustomerModel> Customers = new List<CustomerModel>
+        private readonly IndustriTrackContext _context;
+        public CustomersController(IndustriTrackContext context)
         {
-            new CustomerModel { Id = 1, Name = "Acme Corp", Email = "acme@example.com", Phone = "1234567890", Address = "123 Main St" },
-            new CustomerModel { Id = 2, Name = "Beta Textiles", Email = "beta@example.com", Phone = "9876543210", Address = "456 Market Ave" }
-        };
+            _context = context;
+        }
 
         [HttpGet]
-        public ActionResult<IEnumerable<CustomerModel>> GetCustomers() => Ok(Customers);
+        public async Task<ActionResult<IEnumerable<CustomerModel>>> GetCustomers()
+        {
+            return Ok(await _context.Customers.ToListAsync());
+        }
 
         [HttpPost]
-        public ActionResult<CustomerModel> AddCustomer([FromBody] CustomerModel customer)
+        public async Task<ActionResult<CustomerModel>> AddCustomer([FromBody] CustomerModel customer)
         {
-            customer.Id = Customers.Count > 0 ? Customers.Max(c => c.Id) + 1 : 1;
-            Customers.Add(customer);
+            _context.Customers.Add(customer);
+            await _context.SaveChangesAsync();
             return Ok(customer);
         }
 
         [HttpPut("{id}")]
-        public IActionResult EditCustomer(int id, [FromBody] CustomerModel customer)
+        public async Task<IActionResult> EditCustomer(int id, [FromBody] CustomerModel customer)
         {
-            var idx = Customers.FindIndex(c => c.Id == id);
-            if (idx < 0) return NotFound();
+            var existing = await _context.Customers.FindAsync(id);
+            if (existing == null) return NotFound();
             customer.Id = id;
-            Customers[idx] = customer;
+            _context.Entry(existing).CurrentValues.SetValues(customer);
+            await _context.SaveChangesAsync();
             return Ok(customer);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteCustomer(int id)
+        public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var idx = Customers.FindIndex(c => c.Id == id);
-            if (idx < 0) return NotFound();
-            Customers.RemoveAt(idx);
+            var existing = await _context.Customers.FindAsync(id);
+            if (existing == null) return NotFound();
+            _context.Customers.Remove(existing);
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }

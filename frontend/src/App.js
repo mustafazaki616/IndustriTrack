@@ -16,6 +16,7 @@ import Settings from './pages/Settings';
 import Shipments from './pages/Shipments';
 import Signup from './pages/Signup';
 import UploadOrder from './pages/UploadOrder';
+import Orders from './pages/Orders';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/uploadorder" element={<UploadOrder />} />
               <Route path="/upload-order" element={<UploadOrder />} />
+              <Route path="/orders" element={<Orders />} />
               <Route path="/" element={<Dashboard />} />
             </Routes>
           </MainLayout>

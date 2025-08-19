@@ -19,8 +19,12 @@ builder.Services.AddDbContext<IndustriTrackContext>(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy => policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod());
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
 var app = builder.Build();
@@ -36,12 +40,15 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors("AllowFrontend"); // Allow CORS for React dev server
 }
+// In production, configure CORS securely for your frontend domain only
+// app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
-app.UseCors("AllowFrontend");
 app.UseAuthorization();
 app.MapControllers();
 
