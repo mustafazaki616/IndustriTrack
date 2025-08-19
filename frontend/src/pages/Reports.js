@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, TextField, Card, CardContent, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import axios from 'axios';
+import { apiGet, apiPut } from '../api';
 import { useLocation } from 'react-router-dom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
@@ -31,12 +31,12 @@ export default function Reports() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get('/api/reports');
-        setReports(res.data);
+        const data = await apiGet('/api/reports');
+        setReports(Array.isArray(data) ? data : []);
         
         // If productionId is provided, find and highlight that report
         if (productionId) {
-          const report = res.data.find(r => r.productionId === productionId);
+          const report = data.find(r => r.productionId === productionId);
           if (report) {
             setCurrentReport(report);
             setViewDialogOpen(true);
@@ -118,7 +118,7 @@ export default function Reports() {
   const handleSaveEdit = async () => {
     try {
       // Save the edited report
-      await axios.put(`/api/reports/${editedReport.id}`, editedReport);
+      await apiPut(`/api/reports/${editedReport.id}`, editedReport);
       
       // Update the reports list
       const updatedReports = reports.map(r => 

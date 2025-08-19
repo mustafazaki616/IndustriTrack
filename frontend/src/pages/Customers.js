@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, TextField, Button, Card, CardContent } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import axios from 'axios';
+import { apiGet } from '../api';
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -11,9 +11,10 @@ export default function Customers() {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const res = await axios.get('/api/customers');
-        setCustomers(res.data);
+        const data = await apiGet('/api/customers');
+        setCustomers(Array.isArray(data) ? data : []);
       } catch (err) {
+        console.error('Error fetching customers:', err);
         setCustomers([]);
       } finally {
         setLoading(false);
@@ -22,7 +23,7 @@ export default function Customers() {
     fetchCustomers();
   }, []);
 
-  const filtered = customers.filter(
+  const filtered = (customers || []).filter(
     (c) =>
       (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
       (c.company || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -95,4 +96,4 @@ export default function Customers() {
       </Box>
     </Box>
   );
-} 
+}

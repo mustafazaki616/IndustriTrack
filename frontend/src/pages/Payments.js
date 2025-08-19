@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { blue } from '@mui/material/colors';
 import { DashboardAlertContext } from '../contexts/DashboardAlertContext';
-import axios from 'axios';
+import { apiGet, apiPost, apiPut, apiDelete } from '../api';
 import dayjs from 'dayjs';
 
 const currencies = ['USD', 'EUR', 'JPY', 'RMB', 'CAD', 'GBP'];
@@ -45,9 +45,11 @@ export default function Payments() {
 
   // Fetch payments from backend
   useEffect(() => {
-    axios.get('/api/payments').then(res => {
-      setPaymentData(res.data);
-      console.log('Fetched payments:', res.data);
+    apiGet('/api/payments').then(data => {
+      setPaymentData(Array.isArray(data) ? data : []);
+      console.log('Fetched payments:', data);
+    }).catch(() => {
+      setPaymentData([]);
     });
   }, []);
 
@@ -119,9 +121,9 @@ export default function Payments() {
       daysUntilFullPayment: editPayment.advanceReceived ? Number(editPayment.daysUntilFullPayment) : 0,
       remainingAmount: editPayment.remainingAmount ? Number(editPayment.remainingAmount) : 0,
     };
-    await axios.put(`/api/payments/${editPayment.id}`, updated);
-    const res = await axios.get('/api/payments');
-    setPaymentData(res.data);
+    await apiPut(`/api/payments/${editPayment.id}`, updated);
+    const data = await apiGet('/api/payments');
+    setPaymentData(Array.isArray(data) ? data : []);
     handleEditClose();
   };
 
@@ -199,12 +201,12 @@ export default function Payments() {
       remainingAmount: addPayment.remainingAmount ? Number(addPayment.remainingAmount) : 0,
     };
     try {
-      await axios.post('/api/payments', toSend);
-      const refreshed = await axios.get('/api/payments');
-      setPaymentData(refreshed.data);
+      await apiPost('/api/payments', toSend);
+      const refreshed = await apiGet('/api/payments');
+      setPaymentData(Array.isArray(refreshed) ? refreshed : []);
       handleAddClose();
     } catch (err) {
-      setAddError(err.response?.data?.message || 'Failed to add payment.');
+      setAddError(err.message || 'Failed to add payment.');
     }
   };
 
@@ -212,9 +214,9 @@ export default function Payments() {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this payment?')) return;
     try {
-      await axios.delete(`/api/payments/${id}`);
-      const refreshed = await axios.get('/api/payments');
-      setPaymentData(refreshed.data);
+      await apiDelete(`/api/payments/${id}`);
+      const refreshed = await apiGet('/api/payments');
+      setPaymentData(Array.isArray(refreshed) ? refreshed : []);
     } catch (err) {
       alert('Failed to delete payment.');
     }
@@ -428,4 +430,4 @@ export default function Payments() {
       </Dialog>
     </Box>
   );
-} 
+}

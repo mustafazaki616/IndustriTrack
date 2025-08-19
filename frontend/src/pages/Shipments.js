@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, TextField, Button, Card, CardContent, MenuItem, Select, InputAdornment } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
-import axios from 'axios';
+import { apiGet, apiPost, apiPut } from '../api';
 import Snackbar from '@mui/material/Snackbar';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -60,8 +60,8 @@ export default function Shipments() {
   useEffect(() => {
     const fetchShipments = async () => {
       try {
-        const res = await axios.get('/api/shipments');
-        setShipments(res.data);
+        const data = await apiGet('/api/shipments');
+        setShipments(Array.isArray(data) ? data : []);
       } catch (err) {
         setShipments([]);
       } finally {
@@ -112,8 +112,8 @@ export default function Shipments() {
       setSnackbar({ open: true, message: 'Shipment added!', severity: 'success' });
       setAddOpen(false);
       // Refresh
-      const res = await axios.get('/api/shipments');
-      setShipments(res.data);
+      const data = await apiGet('/api/shipments');
+      setShipments(Array.isArray(data) ? data : []);
     } catch {
       setSnackbar({ open: true, message: 'Failed to add shipment.', severity: 'error' });
     }
@@ -389,4 +389,4 @@ export default function Shipments() {
       </Dialog>
     </Box>
   );
-} 
+}

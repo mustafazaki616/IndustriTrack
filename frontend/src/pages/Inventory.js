@@ -8,7 +8,7 @@ import TextField from '@mui/material/TextField';
 import Snackbar from '@mui/material/Snackbar';
 import dayjs from 'dayjs';
 import PrintIcon from '@mui/icons-material/Print';
-import axios from 'axios';
+import { apiGet, apiPost } from '../api';
 
 const stockBreakdown = [
   { product: 'Product A', xs: 100, s: 200, m: 300, l: 250, xl: 150, total: 1000 },
@@ -60,8 +60,8 @@ export default function Inventory() {
     const fetchStockOuts = async () => {
       setLoadingStockOut(true);
       try {
-        const res = await axios.get('/api/stockout');
-        setStockOutLog(res.data);
+        const data = await apiGet('/api/stockout');
+        setStockOutLog(Array.isArray(data) ? data : []);
       } catch {
         setSnackbar({ open: true, message: 'Failed to fetch stock out log', severity: 'error' });
       } finally {
@@ -367,4 +367,4 @@ export default function Inventory() {
       <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ ...snackbar, open: false })} message={snackbar.message} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
     </Box>
   );
-} 
+}
