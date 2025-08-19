@@ -5,6 +5,6 @@
   "devCommand": "cd frontend && npm start",
   "framework": "create-react-app",
   "env": {
-    "REACT_APP_API_URL": "https://your-backend-api.com"
+    "REACT_APP_API_URL": "https://industri-track-backend-production.up.railway.app"
   }
 }

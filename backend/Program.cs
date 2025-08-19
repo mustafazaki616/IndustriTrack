@@ -27,8 +27,10 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:3000", // Local development
-                "https://industri-track-frontend-c9aa8o08b-zakis-projects-a97e61f1.vercel.app", // Vercel deployment
-                "https://*.vercel.app" // Allow all Vercel deployments
+                "http://localhost:3001", // Local development alternate port
+                "https://industri-track-frontend.vercel.app", // Main Vercel production URL
+                "https://industri-track-frontend-c9aa8o08b-zakis-projects-a97e61f1.vercel.app", // Old Vercel deployment
+                "https://industri-track-frontend-82mp5hi7e-zakis-projects-a97e61f1.vercel.app" // Latest Vercel deployment
               )
               .AllowAnyHeader()
               .AllowAnyMethod();
@@ -51,8 +53,8 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors("AllowFrontend"); // Allow CORS for React dev server
 }
+
 // Enable CORS for both development and production
 app.UseCors("AllowFrontend");
 
