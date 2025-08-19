@@ -63,6 +63,10 @@ app.MapControllers();
 // Add health check endpoint for Railway
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow, version = "1.0.0" }));
 
+// Add simple test endpoint
+app.MapGet("/", () => "IndustriTrack Backend is running!");
+app.MapGet("/test", () => Results.Ok(new { message = "Test endpoint working", port = Environment.GetEnvironmentVariable("PORT") ?? "8080" }));
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
