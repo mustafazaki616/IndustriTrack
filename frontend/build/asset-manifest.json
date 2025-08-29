@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/IndustriTrack/static/css/main.233b3b67.css",
-    "main.js": "/IndustriTrack/static/js/main.3769bac9.js",
-    "index.html": "/IndustriTrack/index.html",
-    "main.233b3b67.css.map": "/IndustriTrack/static/css/main.233b3b67.css.map",
-    "main.3769bac9.js.map": "/IndustriTrack/static/js/main.3769bac9.js.map"
+    "main.css": "/static/css/main.233b3b67.css",
+    "main.js": "/static/js/main.eab27e2d.js",
+    "index.html": "/index.html",
+    "main.233b3b67.css.map": "/static/css/main.233b3b67.css.map",
+    "main.eab27e2d.js.map": "/static/js/main.eab27e2d.js.map"
   },
   "entrypoints": [
     "static/css/main.233b3b67.css",
-    "static/js/main.3769bac9.js"
+    "static/js/main.eab27e2d.js"
   ]
 }

@@ -26,7 +26,9 @@ const statusOptions = [
   'FINISHING',
   'PACKING',
   'OFFLINE',
-  'INSPECTION', // Add INSPECTION as the 8th step
+  'INSPECTION',
+  'Shipped',
+  'Delivered'
 ];
 const statusSteps = statusOptions;
 
@@ -81,7 +83,7 @@ export default function Shipments() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await axios.put(`/api/shipments/${id}`, { ...shipments.find(s => s.id === id), status: newStatus });
+      await apiPut(`/api/shipments/${id}`, { ...shipments.find(s => s.id === id), status: newStatus });
       setShipments(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
       setSnackbar({ open: true, message: 'Status updated successfully!', severity: 'success' });
     } catch (err) {
@@ -108,7 +110,7 @@ export default function Shipments() {
 
   const handleAddSubmit = async () => {
     try {
-      await axios.post('/api/shipments', newShipment);
+      await apiPost('/api/shipments', newShipment);
       setSnackbar({ open: true, message: 'Shipment added!', severity: 'success' });
       setAddOpen(false);
       // Refresh
@@ -276,7 +278,7 @@ export default function Shipments() {
         message={snackbar.message}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
-      <Dialog open={detailsOpen} onClose={handleDetailsClose} maxWidth="sm" fullWidth>
+      <Dialog open={detailsOpen} onClose={handleDetailsClose} maxWidth="sm" fullWidth disablePortal>
         <DialogTitle>
           Shipment Details
           <IconButton onClick={handleDetailsClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
@@ -303,7 +305,7 @@ export default function Shipments() {
           <Button onClick={handleDetailsClose}>Close</Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={addOpen} onClose={handleAddClose} maxWidth="sm" fullWidth>
+      <Dialog open={addOpen} onClose={handleAddClose} maxWidth="sm" fullWidth disablePortal>
         <DialogTitle>
           Add New Shipment
           <IconButton onClick={handleAddClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
@@ -333,7 +335,7 @@ export default function Shipments() {
           <Button variant="contained" onClick={handleAddSubmit}>Add Shipment</Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={invoiceOpen} onClose={handleInvoiceClose} maxWidth="sm" fullWidth>
+      <Dialog open={invoiceOpen} onClose={handleInvoiceClose} maxWidth="sm" fullWidth disablePortal>
         <DialogTitle>
           Invoice
           <IconButton onClick={handleInvoiceClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
@@ -361,7 +363,7 @@ export default function Shipments() {
           <Button onClick={handleInvoiceClose}>Close</Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={inspectionOpen} onClose={handleInspectionClose} maxWidth="sm" fullWidth>
+      <Dialog open={inspectionOpen} onClose={handleInspectionClose} maxWidth="sm" fullWidth disablePortal>
         <DialogTitle>
           Inspection Details
           <IconButton onClick={handleInspectionClose} sx={{ position: 'absolute', right: 8, top: 8 }}>

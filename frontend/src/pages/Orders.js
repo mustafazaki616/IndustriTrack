@@ -287,7 +287,7 @@ export default function Orders() {
         </Table>
       </TableContainer>
       {/* Edit/Add Dialog */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth disablePortal>
         <DialogTitle>{editIdx >= 0 ? 'Edit' : 'Add'} Order</DialogTitle>
         <DialogContent>
           <TextField label="Customer" name="customer" value={form.customer} onChange={handleChange} fullWidth margin="dense" error={!!errors.customer} helperText={errors.customer} />
@@ -304,7 +304,7 @@ export default function Orders() {
         </DialogActions>
       </Dialog>
       {/* Details Dialog */}
-      <Dialog open={detailsIdx >= 0} onClose={handleDetailsClose} maxWidth="sm" fullWidth>
+      <Dialog open={detailsIdx >= 0} onClose={handleDetailsClose} maxWidth="sm" fullWidth disablePortal>
         <DialogTitle>Order Details</DialogTitle>
         <DialogContent>
           {detailsIdx >= 0 && (
@@ -327,7 +327,7 @@ export default function Orders() {
         </DialogActions>
       </Dialog>
       {/* TNA Dialog for stage durations */}
-      <Dialog open={tnaDialog.open} onClose={handleCloseTnaDialog} maxWidth="xs" fullWidth>
+      <Dialog open={tnaDialog.open} onClose={handleCloseTnaDialog} maxWidth="xs" fullWidth disablePortal>
         <DialogTitle>Specify Stage Durations (days)</DialogTitle>
         <DialogContent>
           {PRODUCTION_STAGES.map((stage, idx) => (

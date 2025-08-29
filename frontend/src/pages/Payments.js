@@ -342,8 +342,8 @@ export default function Payments() {
         </Table>
       </TableContainer>
       {/* Ledger Dialog */}
-      <Dialog open={ledgerOpen} onClose={handleLedgerClose} maxWidth="md" fullWidth>
-        <DialogTitle>Vendor Ledger - {selectedVendor}</DialogTitle>
+      <Dialog open={ledgerOpen} onClose={handleLedgerClose} maxWidth="md" fullWidth disablePortal>
+        <DialogTitle>Customer Ledger</DialogTitle>
         <DialogContent>
           <Typography sx={{ mb: 2 }}>All payment history for this vendor will be shown here.</Typography>
         </DialogContent>
@@ -352,8 +352,8 @@ export default function Payments() {
         </DialogActions>
       </Dialog>
       {/* Edit Payment Dialog */}
-      <Dialog open={editOpen} onClose={handleEditClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Update Payment</DialogTitle>
+      <Dialog open={editOpen} onClose={handleEditClose} maxWidth="sm" fullWidth disablePortal>
+        <DialogTitle>Edit Payment</DialogTitle>
         <DialogContent>
           {editPayment && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
@@ -387,8 +387,8 @@ export default function Payments() {
         </DialogActions>
       </Dialog>
       {/* Add Payment Dialog */}
-      <Dialog open={addOpen} onClose={handleAddClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Payment</DialogTitle>
+      <Dialog open={addOpen} onClose={handleAddClose} maxWidth="sm" fullWidth disablePortal>
+        <DialogTitle>Add New Payment</DialogTitle>
         <DialogContent>
           {addError && <Alert severity="error" sx={{ mb: 2 }}>{addError}</Alert>}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>

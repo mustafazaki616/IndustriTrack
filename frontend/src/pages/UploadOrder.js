@@ -109,8 +109,8 @@ export default function UploadOrder() {
         </CardContent>
       </Card>
       {/* Confirmation Dialog */}
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Confirm Extracted Order</DialogTitle>
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="md" fullWidth disablePortal>
+        <DialogTitle>Confirm Order Details</DialogTitle>
         <DialogContent>
           {extracted ? (
             <>
@@ -183,4 +183,4 @@ export default function UploadOrder() {
       </TableContainer>
     </Box>
   );
-} 
+}

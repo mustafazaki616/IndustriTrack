@@ -316,7 +316,7 @@ export default function Inspections() {
           ))}
         </Box>
       )}
-      <Dialog open={!!imgPreview} onClose={handleImgPreviewClose} maxWidth="md">
+      <Dialog open={!!imgPreview} onClose={handleImgPreviewClose} maxWidth="md" disablePortal>
         <DialogTitle>
           Image Preview
           <IconButton onClick={handleImgPreviewClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
@@ -327,7 +327,7 @@ export default function Inspections() {
           <img src={imgPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: 500 }} />
         </DialogContent>
       </Dialog>
-      <Dialog open={printDialog} onClose={() => setPrintDialog(false)}>
+      <Dialog open={printDialog} onClose={() => setPrintDialog(false)} disablePortal>
         <DialogTitle>Include images in printout?</DialogTitle>
         <DialogActions>
           <Button onClick={() => { setIncludeImages(false); handlePrintConfirm(); }}>No</Button>

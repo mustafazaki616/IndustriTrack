@@ -22,7 +22,7 @@ function App() {
   return (
     <DashboardAlertProvider>
       <AuthProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <MainLayout>
             <Sidebar />
             <Routes>
@@ -49,4 +49,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

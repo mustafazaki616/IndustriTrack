@@ -204,6 +204,7 @@ export default function Reports() {
         onClose={() => setViewDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        disablePortal
       >
         <DialogTitle>
           Report Details

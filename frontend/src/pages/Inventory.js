@@ -241,7 +241,7 @@ export default function Inventory() {
           </TableBody>
         </Table>
       </TableContainer>
-      <Dialog open={editPriceOpen} onClose={() => setEditPriceOpen(false)}>
+      <Dialog open={editPriceOpen} onClose={() => setEditPriceOpen(false)} disablePortal>
         <DialogTitle>Edit Price</DialogTitle>
         <DialogContent>
           <TextField label="Price" type="number" value={editPrice} onChange={e => setEditPrice(e.target.value)} fullWidth sx={{ mt: 1 }} />
@@ -251,7 +251,7 @@ export default function Inventory() {
           <Button variant="contained" onClick={handleEditPriceSave}>Save</Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={stockOutOpen} onClose={() => setStockOutOpen(false)}>
+      <Dialog open={stockOutOpen} onClose={() => setStockOutOpen(false)} disablePortal>
         <DialogTitle>Stock Out</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <TextField label="Quantity" type="number" value={stockOutQty} onChange={e => setStockOutQty(e.target.value)} fullWidth />
@@ -306,7 +306,7 @@ export default function Inventory() {
           </TableBody>
         </Table>
       </TableContainer>
-      <Dialog open={detailsOpen} onClose={handleDetailsClose} maxWidth="sm" fullWidth>
+      <Dialog open={detailsOpen} onClose={handleDetailsClose} maxWidth="sm" fullWidth disablePortal>
         <DialogTitle>Product Details</DialogTitle>
         <DialogContent dividers>
           {detailsProduct && (
@@ -345,7 +345,7 @@ export default function Inventory() {
           <Button onClick={handleDetailsClose}>Close</Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={invoiceOpen} onClose={handleInvoiceClose} maxWidth="sm" fullWidth>
+      <Dialog open={invoiceOpen} onClose={handleInvoiceClose} maxWidth="sm" fullWidth disablePortal>
         <DialogTitle>Invoice</DialogTitle>
         <DialogContent dividers>
           {invoiceData && (

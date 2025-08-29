@@ -353,7 +353,7 @@ export default function Production() {
           );
         })}
       </Box>
-      <Dialog open={orderModalOpen} onClose={handleOrderModalClose} maxWidth="sm" fullWidth>
+      <Dialog open={orderModalOpen} onClose={handleOrderModalClose} maxWidth="sm" fullWidth disablePortal>
         <DialogTitle>
           Order Details
           <IconButton onClick={handleOrderModalClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
@@ -378,7 +378,7 @@ export default function Production() {
         </DialogActions>
       </Dialog>
       {/* Modal for overdue stage prompt */}
-      <Dialog open={stagePrompt.open} onClose={handleCloseStagePrompt} maxWidth="xs" fullWidth>
+      <Dialog open={stagePrompt.open} onClose={handleCloseStagePrompt} maxWidth="xs" fullWidth disablePortal>
         <DialogTitle>Stage Overdue</DialogTitle>
         <DialogContent dividers>
           <Typography sx={{ mb: 2 }}>Has this stage been completed?</Typography>
